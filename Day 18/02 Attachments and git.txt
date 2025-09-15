@@ -1,169 +1,3 @@
----Unmanaged Scenario changes
-
-@Metadata.layer: #CUSTOMER
-@UI.headerInfo:{
-    typeName: 'Travel',
-    typeNamePlural: 'Travels',
-    title: { value: 'TravelId' },
-    description: { value: 'CustomerName' }
- }
-annotate view ZLAM_AB_U_TRAVEL
-    with 
-{
-    @UI.facet: [
-                { 
-                    purpose: #HEADER,
-                    type: #DATAPOINT_REFERENCE,
-                    label: 'Flight Ticket Price',
-                    position: 10,
-                    targetQualifier: 'price_data'
-                },
-                { 
-                    purpose: #HEADER,
-                    type: #DATAPOINT_REFERENCE,
-                    label: 'Status',
-                    position: 20,
-                    targetQualifier: 'status'
-                },
-                { 
-                    purpose: #STANDARD,
-                    type: #COLLECTION,
-                    position: 10,
-                    id: 'super',
-                    label: 'Additional Details'                
-                },
-                { 
-                    purpose: #STANDARD,
-                    type: #IDENTIFICATION_REFERENCE,
-                    label: 'More Info',
-                    position: 10,
-                    parentId: 'super'
-                },
-                { 
-                    purpose: #STANDARD,
-                    type: #FIELDGROUP_REFERENCE,
-                    label: 'Price data',
-                    position: 20,
-                    parentId: 'super',
-                    targetQualifier: 'pricing'
-                },{ 
-                    purpose: #STANDARD,
-                    type: #FIELDGROUP_REFERENCE,
-                    label: 'Dates',
-                    position: 30,
-                    parentId: 'super',
-                    targetQualifier: 'dates'
-                }
-               ]
-    @UI.selectionField: [{ position: 10 }]
-    @UI.lineItem: [{ position: 10 },
-    { type: #FOR_ACTION, label: 'Set Status',
-    dataAction: 'set_booked_status' }]
-    @UI.identification: [{ position: 10 },
-    { type: #FOR_ACTION, label: 'Set Status to Booked',
-    dataAction: 'set_booked_status' }]
-    TravelId;
-    @UI.selectionField: [{ position: 20 }]
-    @UI.lineItem: [{ position: 20 }]
-    @UI.identification: [{ position: 20 }]
-    AgencyId;
-    @UI.selectionField: [{ position: 30 }]
-    @UI.lineItem: [{ position: 30 }]
-    @UI.identification: [{ position: 30 }]
-    CustomerId;
-    @UI.lineItem: [{ position: 40 }]
-    @UI.fieldGroup: [{ qualifier: 'dates', label: 'Start Date', position: 10 }]
-    BeginDate;
-    @UI.fieldGroup: [{ qualifier: 'dates', label: 'End Date', position: 20 }]
-    EndDate;
-    @UI.fieldGroup: [{ qualifier: 'pricing', label: 'Booking Fee', position: 10 }]
-    BookingFee;
-    @UI.selectionField: [{ position: 40 }]
-    @UI.lineItem: [{ position: 50 }]
-    @UI.dataPoint: { qualifier: 'price_data', title: 'Flight Price' }
-    @UI.fieldGroup: [{ qualifier: 'pricing', label: 'Total Price', position: 20 }]
-    TotalPrice;
-    @UI.fieldGroup: [{ qualifier: 'pricing', label: 'Currency Code', position: 30 }]
-    CurrencyCode;
-    @UI.identification: [{ position: 40 }]
-    Memo;
-    @UI.selectionField: [{ position: 50 }]
-    @UI.lineItem: [{ position: 70 , importance: #HIGH }]
-    @UI.fieldGroup: [{ qualifier: 'dates', label: 'Status', position: 30 }]
-    @UI.dataPoint: { qualifier: 'status', title: 'Status' }
-    Status;
-   
-}
-
-
-
-@EndUserText.label: 'Service definition for unmanaged travel request'
-define service ZLAM_AB_SD_U_TRAVEL {
-  expose ZLAM_AB_U_TRAVEL         as Travel;
-  expose ZLAM_AB_U_AGENCY        as Agency;
-  expose ZLAM_AB_U_CUSTOMER      as Customer;
-  expose I_Country               as Country;
-  expose I_Currency              as Currency;
-  expose /DMO/I_Travel_Status_VH as Status;
-}
-
-
-@AbapCatalog.viewEnhancementCategory: [#NONE]
-@AccessControl.authorizationCheck: #NOT_REQUIRED
-@EndUserText.label: 'Root Travel Business Object for unmanaged scenario'
-@Metadata.ignorePropagatedAnnotations: true
-@ObjectModel.usageType:{
-    serviceQuality: #X,
-    sizeCategory: #S,
-    dataClass: #MIXED
-}
-@Metadata.allowExtensions: true
-define root view entity ZLAM_AB_U_TRAVEL as select from /dmo/travel as Travel
-association[1] to ZLAM_AB_U_AGENCY as _Agency on
-$projection.AgencyId = _Agency.AgencyId
-association[1] to ZLAM_AB_U_CUSTOMER as _Customer on
-$projection.CustomerId = _Customer.CustomerId
-association[1] to I_Currency as _Currency on
-$projection.CurrencyCode = _Currency.Currency
-association[1] to /DMO/I_Travel_Status_VH as _TravelStatus on
-$projection.Status = _TravelStatus.TravelStatus
-{
-@ObjectModel.text.element: [ 'Memo' ]
-key travel_id as TravelId,
-@ObjectModel.text.element: [ 'AgencyName' ]
-@Consumption.valueHelpDefinition: [{ entity: { name: 'ZLAM_AB_U_AGENCY', element: 'AgencyId' } }]
-agency_id as AgencyId,
-_Agency.Name as AgencyName,
-@ObjectModel.text.element: [ 'CustomerName' ]
-@Consumption.valueHelpDefinition: [{ entity: { name: 'ZLAM_AB_U_CUSTOMER', element: 'CustomerId' } }]
-customer_id as CustomerId,
-_Customer.CustomerName as CustomerName,
-begin_date as BeginDate,
-end_date as EndDate,
-@Semantics.amount.currencyCode: 'CurrencyCode'
-booking_fee as BookingFee,
-@Semantics.amount.currencyCode: 'CurrencyCode'
-total_price as TotalPrice,
-currency_code as CurrencyCode,
-description as Memo,
-@ObjectModel.text.element: [ 'TravelStatus' ]
-@Consumption.valueHelpDefinition: [{ entity: { name: '/DMO/I_Travel_Status_VH', element: 'Status' } }]
-status as Status,
-_TravelStatus._Text[Language = $session.system_language].TravelStatus as TravelStatus,
-createdby as Createdby,
-createdat as Createdat,
-lastchangedby as Lastchangedby,
-lastchangedat as Lastchangedat,
-_Agency,
-_Customer,
-_Currency,
-_TravelStatus    
-}
-
-
-
-----Attachment changes
-
 zdte_xx_attach	-	predefined type	- RAWSTRING 0
 zdte_xx_filet	-	domain	- CHAR128
 zdte_xx_filen	-	domain	- CHAR128
@@ -174,7 +8,7 @@ zdte_xx_filen	-	domain	- CHAR128
 @AbapCatalog.tableCategory : #TRANSPARENT
 @AbapCatalog.deliveryClass : #A
 @AbapCatalog.dataMaintenance : #RESTRICTED
-define table ZLAM_AB_attach {
+define table ZAM_AB_attach {
 
   key client            : abap.clnt not null;
   key travel_id         : /dmo/travel_id not null;
@@ -206,8 +40,8 @@ zdte_xx_filen and zdte_xx_filet = CHAR128
     sizeCategory: #S,
     dataClass: #MIXED
 }
-define view entity ZLAM_AB_m_attach as select from ZLAM_AB_attach
-association to parent ZLAM_AB_TRAVEL as _Travel on
+define view entity ZAM_AB_m_attach as select from ZAM_AB_attach
+association to parent ZAM_AB_TRAVEL as _Travel on
     $projection.TravelId = _Travel.TravelId
 {
     key travel_id as TravelId,
@@ -245,12 +79,12 @@ association to parent ZLAM_AB_TRAVEL as _Travel on
 
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Travel Root of by RAP BO'
-define root view entity ZLAM_AB_TRAVEL as select from /dmo/travel_m
+define root view entity ZAM_AB_TRAVEL as select from /dmo/travel_m
 
 --Composition child for travel viz booking
-composition[0..*] of ZLAM_AB_BOOKING as _Booking 
+composition[0..*] of ZAM_AB_BOOKING as _Booking 
 --Composition child for travel viz attachment
-composition[0..*] of ZLAM_AB_m_attach as _Attachment 
+composition[0..*] of ZAM_AB_m_attach as _Attachment 
 --associations - lose coupling to get dependent data
 association[1] to /DMO/I_Agency as _Agency on 
     $projection.AgencyId = _Agency.AgencyID
@@ -308,7 +142,7 @@ association[1..1] to /DMO/I_Overall_Status_VH as _OverallStatus on
 @EndUserText.label: 'My Travel processor projection'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @Metadata.allowExtensions: true
-define root view entity ZLAM_AB_TRAVEL_PROCESSOR as projection on ZLAM_AB_TRAVEL
+define root view entity ZAM_AB_TRAVEL_PROCESSOR as projection on ZAM_AB_TRAVEL
 {
     @ObjectModel.text.element: [ 'Description' ]
     key TravelId,
@@ -350,8 +184,8 @@ define root view entity ZLAM_AB_TRAVEL_PROCESSOR as projection on ZLAM_AB_TRAVEL
     Criticality,
     /* Associations */
     _Agency,
-    _Booking: redirected to composition child ZLAM_AB_BOOKING_PROCESSOR,
-    _Attachment: redirected to composition child ZLAM_AB_Attach_PROCESSOR,
+    _Booking: redirected to composition child ZAM_AB_BOOKING_PROCESSOR,
+    _Attachment: redirected to composition child ZAM_AB_Attach_PROCESSOR,
     _Currency,
     _Customer,
     _OverallStatus,
@@ -369,7 +203,7 @@ define root view entity ZLAM_AB_TRAVEL_PROCESSOR as projection on ZLAM_AB_TRAVEL
 @EndUserText.label: 'My Travel processor projection'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @Metadata.allowExtensions: true
-define view entity ZLAM_AB_ATTACH_PROCESSOR as projection on ZLAM_AB_m_attach
+define view entity ZAM_AB_ATTACH_PROCESSOR as projection on ZAM_AB_m_attach
 {
     key TravelId,
     key Id,
@@ -382,7 +216,7 @@ define view entity ZLAM_AB_ATTACH_PROCESSOR as projection on ZLAM_AB_m_attach
     LocalCreatedBy,
     LocalLastChangedAt,
     LocalLastChangedBy,
-    _Travel: redirected to parent ZLAM_AB_TRAVEL_PROCESSOR
+    _Travel: redirected to parent ZAM_AB_TRAVEL_PROCESSOR
 }
 
 
@@ -394,7 +228,7 @@ strict ( 2 );
 with draft;
 
 //define the behavior for root entity
-define behavior for ZLAM_AB_TRAVEL alias Travel
+define behavior for ZAM_AB_TRAVEL alias Travel
 //make the behavior pool/implemetation for travel
 implementation in class zbp_ats_xx_travel unique
 //telling the framework to insert data in this db table for travel request
@@ -478,7 +312,7 @@ with additional save
 }
 
 //define the behavior for child entity
-define behavior for ZLAM_AB_BOOKING alias Booking
+define behavior for ZAM_AB_BOOKING alias Booking
 //make the behavior pool/implemetation for booking
 implementation in class zbp_ats_xx_booking unique
 //telling the framework to insert data in this db table for booking
@@ -526,7 +360,7 @@ early numbering
 }
 
 //define the behavior for child entity
-define behavior for ZLAM_AB_BOOKSUPPL alias BookSuppl
+define behavior for ZAM_AB_BOOKSUPPL alias BookSuppl
 //make the behavior pool/implemetation for travel
 implementation in class zbp_ats_xx_boosuppl unique
 //telling the framework to insert data in this db table for booking suppl
@@ -557,11 +391,11 @@ early numbering
 }
 
 //define the behavior for child entity
-define behavior for ZLAM_AB_m_attach alias Attachment
+define behavior for ZAM_AB_m_attach alias Attachment
 //make the behavior pool/implemetation for booking
 implementation in class zbp_ats_xx_attach unique
 //telling the framework to insert data in this db table for booking
-persistent table ZLAM_AB_attach
+persistent table ZAM_AB_attach
 
 lock dependent by _Travel
 authorization dependent by _Travel
@@ -578,7 +412,7 @@ etag master LastChangedAt
   //Reconfirm that booking will create with travel draft
   association _Travel { with draft; }
 
-  mapping for ZLAM_AB_attach{
+  mapping for ZAM_AB_attach{
     TravelId = travel_id;
     Id = Id;
     Attachment = attachment;
@@ -599,7 +433,7 @@ projection;
 strict ( 2 );
 use draft;
 
-define behavior for ZLAM_AB_TRAVEL_PROCESSOR alias Travel
+define behavior for ZAM_AB_TRAVEL_PROCESSOR alias Travel
 //create a new class for processor implementation
 implementation in class zbp_ats_xx_travel_proc unique
 {
@@ -618,7 +452,7 @@ implementation in class zbp_ats_xx_travel_proc unique
   use association _Attachment { create; with draft; }
 }
 
-define behavior for ZLAM_AB_BOOKING_PROCESSOR alias Booking
+define behavior for ZAM_AB_BOOKING_PROCESSOR alias Booking
 {
   use update;
   use delete;
@@ -627,7 +461,7 @@ define behavior for ZLAM_AB_BOOKING_PROCESSOR alias Booking
   use association _BookingSupplement { create; with draft; }
 }
 
-define behavior for ZLAM_AB_BOOKSUPPL_PROCESSOR alias BookingSuppl
+define behavior for ZAM_AB_BOOKSUPPL_PROCESSOR alias BookingSuppl
 {
   use update;
   use delete;
@@ -636,7 +470,7 @@ define behavior for ZLAM_AB_BOOKSUPPL_PROCESSOR alias BookingSuppl
   use association _Booking { with draft; }
 }
 
-define behavior for ZLAM_AB_ATTACH_PROCESSOR alias Attachment
+define behavior for ZAM_AB_ATTACH_PROCESSOR alias Attachment
 {
   use update;
   use delete;
@@ -646,11 +480,11 @@ define behavior for ZLAM_AB_ATTACH_PROCESSOR alias Attachment
 
 
 @EndUserText.label: 'Processor App ke lie service'
-define service ZLAM_AB_SD_V2_PROCESSOR {
-  expose ZLAM_AB_TRAVEL_PROCESSOR    as Travel;
-  expose ZLAM_AB_BOOKING_PROCESSOR   as Booking;
-  expose ZLAM_AB_ATTACH_PROCESSOR    as Attachment;
-  expose ZLAM_AB_BOOKSUPPL_PROCESSOR as BookSupplement;
+define service ZAM_AB_SD_V2_PROCESSOR {
+  expose ZAM_AB_TRAVEL_PROCESSOR    as Travel;
+  expose ZAM_AB_BOOKING_PROCESSOR   as Booking;
+  expose ZAM_AB_ATTACH_PROCESSOR    as Attachment;
+  expose ZAM_AB_BOOKSUPPL_PROCESSOR as BookSupplement;
   expose /DMO/I_Agency               as Agency;
   expose /DMO/I_Customer             as Customer;
   expose /DMO/I_Carrier              as Carrier;
@@ -667,7 +501,7 @@ define service ZLAM_AB_SD_V2_PROCESSOR {
     title: { value: 'Id' },
     description: { value: 'Memo' }
 }
-annotate view ZLAM_AB_ATTACH_PROCESSOR
+annotate view ZAM_AB_ATTACH_PROCESSOR
     with 
 {
     @UI.facet: [
@@ -708,7 +542,7 @@ annotate view ZLAM_AB_ATTACH_PROCESSOR
     title: { value: 'TravelId' },
     description: { value: '_Customer.FirstName' }
  }
-annotate view ZLAM_AB_TRAVEL_PROCESSOR
+annotate view ZAM_AB_TRAVEL_PROCESSOR
     with 
 {
     @UI.facet: [
@@ -843,8 +677,8 @@ annotate view ZLAM_AB_TRAVEL_PROCESSOR
     sizeCategory: #S,
     dataClass: #MIXED
 }
-define view entity ZLAM_AB_m_attach as select from ZLAM_AB_attach
-association to parent ZLAM_AB_TRAVEL as _Travel on
+define view entity ZAM_AB_m_attach as select from ZAM_AB_attach
+association to parent ZAM_AB_TRAVEL as _Travel on
     $projection.TravelId = _Travel.TravelId
 {
     key travel_id as TravelId,

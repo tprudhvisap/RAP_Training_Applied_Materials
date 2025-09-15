@@ -1,15 +1,15 @@
 Fiori App URL - https://github.com/soyuztechnologies/anubhav_travel_processor
 
-managed implementation in class zbp_ats_xx_travel unique;
+managed implementation in class zbp_AM_AB_travel unique;
 //guideline and best practice for definition to be followed
 strict ( 2 );
 //add draft feature at BO level
 with draft;
 
 //define the behavior for root entity
-define behavior for ZATS_XX_TRAVEL alias Travel
+define behavior for ZAM_AB_TRAVEL alias Travel
 //make the behavior pool/implemetation for travel
-implementation in class zbp_ats_xx_travel unique
+implementation in class zbp_AM_AB_travel unique
 //telling the framework to insert data in this db table for travel request
 persistent table /dmo/travel_m
 //how the RAP should handle the locks - if a travel request is locked
@@ -91,9 +91,9 @@ with additional save
 }
 
 //define the behavior for child entity
-define behavior for ZATS_XX_BOOKING alias Booking
+define behavior for ZAM_AB_BOOKING alias Booking
 //make the behavior pool/implemetation for booking
-implementation in class zbp_ats_xx_booking unique
+implementation in class zbp_AM_AB_booking unique
 //telling the framework to insert data in this db table for booking
 persistent table /dmo/booking_m
 //draft table for the booking
@@ -139,9 +139,9 @@ early numbering
 }
 
 //define the behavior for child entity
-define behavior for ZATS_XX_BOOKSUPPL alias BookSuppl
+define behavior for ZAM_AB_BOOKSUPPL alias BookSuppl
 //make the behavior pool/implemetation for travel
-implementation in class zbp_ats_xx_boosuppl unique
+implementation in class zbp_AM_AB_boosuppl unique
 //telling the framework to insert data in this db table for booking suppl
 persistent table /dmo/booksuppl_m
 draft table zats_d_booksp
@@ -171,7 +171,7 @@ early numbering
 
 
 
-CLASS lsc_zats_xx_travel DEFINITION INHERITING FROM cl_abap_behavior_saver.
+CLASS lsc_zAM_AB_travel DEFINITION INHERITING FROM cl_abap_behavior_saver.
 
   PROTECTED SECTION.
 
@@ -179,7 +179,7 @@ CLASS lsc_zats_xx_travel DEFINITION INHERITING FROM cl_abap_behavior_saver.
 
 ENDCLASS.
 
-CLASS lsc_zats_xx_travel IMPLEMENTATION.
+CLASS lsc_zAM_AB_travel IMPLEMENTATION.
 
   METHOD save_modified.
 
@@ -263,10 +263,10 @@ CLASS lhc_Travel DEFINITION INHERITING FROM cl_abap_behavior_handler.
     METHODS earlynumbering_cba_booking FOR NUMBERING
       IMPORTING entities FOR CREATE travel\_booking.
 
-    types:  t_entity_create type table for create zats_xx_travel,
-              t_entity_update TYPE table for update zats_xx_travel,
-              t_entity_rep type table for REPORTED zats_xx_travel,
-              t_entity_err type table for FAILED zats_xx_travel.
+    types:  t_entity_create type table for create zAM_AB_travel,
+              t_entity_update TYPE table for update zAM_AB_travel,
+              t_entity_rep type table for REPORTED zAM_AB_travel,
+              t_entity_err type table for FAILED zAM_AB_travel.
 
     methods precheck_anubhav_reuse
         importing
@@ -286,7 +286,7 @@ CLASS lhc_Travel IMPLEMENTATION.
     data : ls_result like line of result.
 
     "Step 1: Get the data of my instance
-    READ ENTITIES OF zats_xx_travel in LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel in LOCAL MODE
         ENTITY travel
             fields ( travelid OverallStatus )
                 WITH CORRESPONDING #( keys )
@@ -330,7 +330,7 @@ CLASS lhc_Travel IMPLEMENTATION.
 
   METHOD earlynumbering_create.
 
-    DATA: entity        TYPE STRUCTURE FOR CREATE zats_xx_travel,
+    DATA: entity        TYPE STRUCTURE FOR CREATE zAM_AB_travel,
           travel_id_max TYPE /dmo/travel_id.
 
     ""Step 1: Ensure that Travel id is not set for the record which is coming
@@ -430,7 +430,7 @@ CLASS lhc_Travel IMPLEMENTATION.
     DATA max_booking_id TYPE /dmo/booking_id.
 
     ""Step 1: get all the travel requests and their booking data
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
         ENTITY travel BY \_Booking
         FROM CORRESPONDING #( entities )
         LINK DATA(bookings).
@@ -474,28 +474,28 @@ CLASS lhc_Travel IMPLEMENTATION.
 
   METHOD copyTravel.
 
-    DATA: travels       TYPE TABLE FOR CREATE zats_xx_travel\\Travel,
-          bookings_cba  TYPE TABLE FOR CREATE zats_xx_travel\\Travel\_Booking,
-          booksuppl_cba TYPE TABLE FOR CREATE zats_xx_travel\\Booking\_BookingSupplement.
+    DATA: travels       TYPE TABLE FOR CREATE zAM_AB_travel\\Travel,
+          bookings_cba  TYPE TABLE FOR CREATE zAM_AB_travel\\Travel\_Booking,
+          booksuppl_cba TYPE TABLE FOR CREATE zAM_AB_travel\\Booking\_BookingSupplement.
 
     "Step 1: Remove the travel instances with initial %cid
     READ TABLE keys WITH KEY %cid = '' INTO DATA(key_with_initial_cid).
     ASSERT key_with_initial_cid IS INITIAL.
 
     "Step 2: Read all travel, booking and booking supplement using EML
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
     ENTITY Travel
         ALL FIELDS WITH CORRESPONDING #( keys )
         RESULT DATA(travel_read_result)
         FAILED failed.
 
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
     ENTITY Travel BY \_Booking
         ALL FIELDS WITH CORRESPONDING #( travel_read_result )
         RESULT DATA(book_read_result)
         FAILED failed.
 
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
     ENTITY booking BY \_BookingSupplement
         ALL FIELDS WITH CORRESPONDING #( book_read_result )
         RESULT DATA(booksuppl_read_result)
@@ -546,7 +546,7 @@ CLASS lhc_Travel IMPLEMENTATION.
     ENDLOOP.
 
     "Step 5: MODIFY ENTITY EML to create new BO instance using existing data
-    MODIFY ENTITIES OF zats_xx_travel IN LOCAL MODE
+    MODIFY ENTITIES OF zAM_AB_travel IN LOCAL MODE
         ENTITY travel
             CREATE FIELDS ( AgencyId CustomerId BeginDate EndDate BookingFee TotalPrice CurrencyCode OverallStatus )
                 WITH travels
@@ -564,7 +564,7 @@ CLASS lhc_Travel IMPLEMENTATION.
   METHOD get_instance_features.
 
     "Step 1: Read the travel data with status
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
         ENTITY travel
             FIELDS ( travelid overallstatus )
             WITH     CORRESPONDING #( keys )
@@ -607,19 +607,19 @@ CLASS lhc_Travel IMPLEMENTATION.
     DATA : amounts_per_currencycode TYPE STANDARD TABLE OF ty_amount_per_currency.
 
 *    Read all travel instances, subsequent bookings using EML
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
        ENTITY Travel
        FIELDS ( BookingFee CurrencyCode )
        WITH CORRESPONDING #( keys )
        RESULT DATA(travels).
 
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
        ENTITY Travel BY \_Booking
        FIELDS ( FlightPrice CurrencyCode )
        WITH CORRESPONDING #( travels )
        RESULT DATA(bookings).
 
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
        ENTITY Booking BY \_BookingSupplement
        FIELDS ( price CurrencyCode )
        WITH CORRESPONDING #( bookings )
@@ -679,7 +679,7 @@ CLASS lhc_Travel IMPLEMENTATION.
 
     ENDLOOP.
 *    Return the total amount in mapped so the RAP will modify this data to DB
-    MODIFY ENTITIES OF    zats_xx_travel IN LOCAL MODE
+    MODIFY ENTITIES OF    zAM_AB_travel IN LOCAL MODE
     ENTITY travel
     UPDATE FIELDS ( TotalPrice )
     WITH CORRESPONDING #( travels ).
@@ -688,7 +688,7 @@ CLASS lhc_Travel IMPLEMENTATION.
 
   METHOD calculateTotalPrice.
 
-    MODIFY ENTITIES OF zats_xx_travel IN LOCAL MODE
+    MODIFY ENTITIES OF zAM_AB_travel IN LOCAL MODE
         ENTITY travel
             EXECUTE reCalcTotalPrice
             FROM CORRESPONDING #( keys ).
@@ -698,7 +698,7 @@ CLASS lhc_Travel IMPLEMENTATION.
   METHOD validateHeaderData.
 
     "Step 1: Read the travel data
-    READ ENTITIES OF zats_xx_travel IN LOCAL MODE
+    READ ENTITIES OF zAM_AB_travel IN LOCAL MODE
         ENTITY travel
         FIELDS ( CustomerId )
         WITH CORRESPONDING #( keys )
@@ -879,7 +879,7 @@ CLASS lhc_Travel IMPLEMENTATION.
   METHOD acceptTravel.
 
     ""Perform the change of BO instance to change status
-    MODIFY ENTITIES OF zats_xx_travel
+    MODIFY ENTITIES OF zAM_AB_travel
         ENTITY travel
             UPDATE FIELDS ( OverallStatus )
             WITH VALUE #( for key in keys ( %tky = key-%tky
@@ -887,7 +887,7 @@ CLASS lhc_Travel IMPLEMENTATION.
                                                         OverallStatus = 'A'
              )  ).
     ""Read the BO instance on which we want to make the changes
-    READ ENTITIES OF zats_xx_travel
+    READ ENTITIES OF zAM_AB_travel
         ENTITY Travel
             ALL FIELDS
                 WITH CORRESPONDING #( keys )
@@ -901,7 +901,7 @@ CLASS lhc_Travel IMPLEMENTATION.
 
   METHOD rejectTravel.
 ""Perform the change of BO instance to change status
-    MODIFY ENTITIES OF zats_xx_travel
+    MODIFY ENTITIES OF zAM_AB_travel
         ENTITY travel
             UPDATE FIELDS ( OverallStatus )
             WITH VALUE #( for key in keys ( %tky = key-%tky
@@ -909,7 +909,7 @@ CLASS lhc_Travel IMPLEMENTATION.
                                                         OverallStatus = 'X'
              )  ).
     ""Read the BO instance on which we want to make the changes
-    READ ENTITIES OF zats_xx_travel
+    READ ENTITIES OF zAM_AB_travel
         ENTITY Travel
             ALL FIELDS
                 WITH CORRESPONDING #( keys )
@@ -927,7 +927,7 @@ ENDCLASS.
 @EndUserText.label: 'My Travel processor projection'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @Metadata.allowExtensions: true
-define root view entity ZATS_XX_TRAVEL_APPROVER as projection on ZATS_XX_TRAVEL
+define root view entity ZAM_AB_TRAVEL_APPROVER as projection on ZAM_AB_TRAVEL
 {
     @ObjectModel.text.element: [ 'Description' ]
     key TravelId,
@@ -969,7 +969,7 @@ define root view entity ZATS_XX_TRAVEL_APPROVER as projection on ZATS_XX_TRAVEL
     Criticality,
     /* Associations */
     _Agency,
-    _Booking: redirected to composition child ZATS_XX_BOOKING_APPROVER,
+    _Booking: redirected to composition child ZAM_AB_BOOKING_APPROVER,
     _Currency,
     _Customer,
     _OverallStatus    
@@ -980,7 +980,7 @@ define root view entity ZATS_XX_TRAVEL_APPROVER as projection on ZATS_XX_TRAVEL
 @EndUserText.label: 'My Travel processor projection'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @Metadata.allowExtensions: true
-define view entity ZATS_XX_BOOKING_APPROVER as projection on ZATS_XX_BOOKING
+define view entity ZAM_AB_BOOKING_APPROVER as projection on ZAM_AB_BOOKING
 {
     key TravelId,
     key BookingId,
@@ -998,7 +998,7 @@ define view entity ZATS_XX_BOOKING_APPROVER as projection on ZATS_XX_BOOKING
     _Carrier,
     _Connection,
     _Customer,
-    _Travel: redirected to parent ZATS_XX_TRAVEL_APPROVER
+    _Travel: redirected to parent ZAM_AB_TRAVEL_APPROVER
 }
 
 
@@ -1010,7 +1010,7 @@ define view entity ZATS_XX_BOOKING_APPROVER as projection on ZATS_XX_BOOKING
     title: { value: 'TravelId' },
     description: { value: '_Customer.FirstName' }
  }
-annotate view ZATS_XX_TRAVEL_APPROVER
+annotate view ZAM_AB_TRAVEL_APPROVER
     with 
 {
     @UI.facet: [
@@ -1126,7 +1126,7 @@ annotate view ZATS_XX_TRAVEL_APPROVER
     title: { value: 'BookingId' },
     description: { value: '_Carrier.Name' }
 }
-annotate view ZATS_XX_BOOKING_APPROVER
+annotate view ZAM_AB_BOOKING_APPROVER
     with 
 {
     @UI.facet: [
@@ -1172,7 +1172,7 @@ projection;
 strict ( 2 );
 use draft;
 
-define behavior for ZATS_XX_TRAVEL_APPROVER alias Travel
+define behavior for ZAM_AB_TRAVEL_APPROVER alias Travel
 {
   //use create;
   use update;
@@ -1193,7 +1193,7 @@ define behavior for ZATS_XX_TRAVEL_APPROVER alias Travel
   use association _Booking;
 }
 
-define behavior for ZATS_XX_BOOKING_APPROVER alias Booking
+define behavior for ZAM_AB_BOOKING_APPROVER alias Booking
 {
   //use update;
   //use delete;
